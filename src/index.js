@@ -60,6 +60,7 @@ const USER_PRIVATE_KEY = process.env.USER_PRIVATE_KEY;
 const USER_ADDRESS = process.env.USER_ADDRESS;
 const COINGECKO_API_KEY = process.env.COINGECKO_API_KEY;
 const ALCHEMY_API_KEY = process.env.ALCHEMY_API_KEY;
+const SOLANA_PRIVATE_KEY = process.env.SOLANA_PRIVATE_KEY;
 
 // Initialize tool service with environment variables
 const toolService = new ToolService(
@@ -67,7 +68,8 @@ const toolService = new ToolService(
   USER_PRIVATE_KEY,
   USER_ADDRESS,
   COINGECKO_API_KEY,
-  ALCHEMY_API_KEY
+  ALCHEMY_API_KEY,
+  SOLANA_PRIVATE_KEY
 );
 
 const server = new Server(
@@ -969,6 +971,189 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           required: ["amount", "decimals"],
         },
       },
+      
+      // Solana Tools
+      {
+        name: TOOL_NAMES.GET_SOLANA_BALANCE,
+        description: "Get SOL balance for a Solana wallet address",
+        inputSchema: {
+          type: "object",
+          properties: {
+            cluster: {
+              type: "string",
+              description: "Solana cluster (mainnet-beta, devnet, testnet)",
+              enum: ["mainnet-beta", "devnet", "testnet"],
+            },
+            address: {
+              type: "string",
+              description: "Solana wallet address (optional, uses configured wallet if not provided)",
+            },
+          },
+          required: [],
+        },
+      },
+      {
+        name: TOOL_NAMES.TRANSFER_SOL,
+        description: "Transfer SOL to another Solana address",
+        inputSchema: {
+          type: "object",
+          properties: {
+            toAddress: {
+              type: "string",
+              description: "Recipient's Solana wallet address",
+            },
+            amount: {
+              type: "number",
+              description: "Amount of SOL to transfer",
+            },
+            cluster: {
+              type: "string",
+              description: "Solana cluster (mainnet-beta, devnet, testnet)",
+              enum: ["mainnet-beta", "devnet", "testnet"],
+            },
+          },
+          required: ["toAddress", "amount"],
+        },
+      },
+      {
+        name: TOOL_NAMES.GET_SOLANA_ACCOUNT_INFO,
+        description: "Get account information for a Solana address",
+        inputSchema: {
+          type: "object",
+          properties: {
+            address: {
+              type: "string",
+              description: "Solana account address to query",
+            },
+            cluster: {
+              type: "string",
+              description: "Solana cluster (mainnet-beta, devnet, testnet)",
+              enum: ["mainnet-beta", "devnet", "testnet"],
+            },
+          },
+          required: ["address"],
+        },
+      },
+      {
+        name: TOOL_NAMES.GET_SOLANA_TRANSACTION_STATUS,
+        description: "Get status of a Solana transaction",
+        inputSchema: {
+          type: "object",
+          properties: {
+            signature: {
+              type: "string",
+              description: "Transaction signature to query",
+            },
+            cluster: {
+              type: "string",
+              description: "Solana cluster (mainnet-beta, devnet, testnet)",
+              enum: ["mainnet-beta", "devnet", "testnet"],
+            },
+          },
+          required: ["signature"],
+        },
+      },
+      {
+        name: TOOL_NAMES.GET_SOLANA_TRANSACTION_DETAILS,
+        description: "Get detailed information about a Solana transaction",
+        inputSchema: {
+          type: "object",
+          properties: {
+            signature: {
+              type: "string",
+              description: "Transaction signature to query",
+            },
+            cluster: {
+              type: "string",
+              description: "Solana cluster (mainnet-beta, devnet, testnet)",
+              enum: ["mainnet-beta", "devnet", "testnet"],
+            },
+          },
+          required: ["signature"],
+        },
+      },
+      {
+        name: TOOL_NAMES.AIRDROP_SOL,
+        description: "Request SOL airdrop on devnet or testnet",
+        inputSchema: {
+          type: "object",
+          properties: {
+            amount: {
+              type: "number",
+              description: "Amount of SOL to airdrop (default: 1)",
+            },
+            cluster: {
+              type: "string",
+              description: "Solana cluster (devnet, testnet only)",
+              enum: ["devnet", "testnet"],
+            },
+          },
+          required: [],
+        },
+      },
+      {
+        name: TOOL_NAMES.GET_SOLANA_SUPPORTED_CLUSTERS,
+        description: "Get list of supported Solana clusters",
+        inputSchema: {
+          type: "object",
+          properties: {},
+          required: [],
+        },
+      },
+      {
+        name: TOOL_NAMES.GET_SOLANA_SLOT,
+        description: "Get current slot information from Solana cluster",
+        inputSchema: {
+          type: "object",
+          properties: {
+            cluster: {
+              type: "string",
+              description: "Solana cluster (mainnet-beta, devnet, testnet)",
+              enum: ["mainnet-beta", "devnet", "testnet"],
+            },
+          },
+          required: [],
+        },
+      },
+      {
+        name: TOOL_NAMES.GET_SOLANA_EPOCH_INFO,
+        description: "Get epoch information from Solana cluster",
+        inputSchema: {
+          type: "object",
+          properties: {
+            cluster: {
+              type: "string",
+              description: "Solana cluster (mainnet-beta, devnet, testnet)",
+              enum: ["mainnet-beta", "devnet", "testnet"],
+            },
+          },
+          required: [],
+        },
+      },
+      {
+        name: TOOL_NAMES.GET_SOLANA_CLUSTER_NODES,
+        description: "Get active nodes in Solana cluster",
+        inputSchema: {
+          type: "object",
+          properties: {
+            cluster: {
+              type: "string",
+              description: "Solana cluster (mainnet-beta, devnet, testnet)",
+              enum: ["mainnet-beta", "devnet", "testnet"],
+            },
+          },
+          required: [],
+        },
+      },
+      {
+        name: TOOL_NAMES.GET_SOLANA_WALLET_ADDRESS,
+        description: "Get configured Solana wallet address",
+        inputSchema: {
+          type: "object",
+          properties: {},
+          required: [],
+        },
+      },
     ],
   };
 });
@@ -1177,6 +1362,51 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case TOOL_NAMES.CONVERT_FORMATTED_TO_WEI:
         result = await toolService.convertFormattedToWei(args);
+        break;
+
+      // Solana Tools
+      case TOOL_NAMES.GET_SOLANA_BALANCE:
+        result = await toolService.getSolanaBalance(args);
+        break;
+
+      case TOOL_NAMES.TRANSFER_SOL:
+        result = await toolService.transferSOL(args);
+        break;
+
+      case TOOL_NAMES.GET_SOLANA_ACCOUNT_INFO:
+        result = await toolService.getSolanaAccountInfo(args);
+        break;
+
+      case TOOL_NAMES.GET_SOLANA_TRANSACTION_STATUS:
+        result = await toolService.getSolanaTransactionStatus(args);
+        break;
+
+      case TOOL_NAMES.GET_SOLANA_TRANSACTION_DETAILS:
+        result = await toolService.getSolanaTransactionDetails(args);
+        break;
+
+      case TOOL_NAMES.AIRDROP_SOL:
+        result = await toolService.airdropSOL(args);
+        break;
+
+      case TOOL_NAMES.GET_SOLANA_SUPPORTED_CLUSTERS:
+        result = await toolService.getSolanaSupportedClusters(args);
+        break;
+
+      case TOOL_NAMES.GET_SOLANA_SLOT:
+        result = await toolService.getSolanaSlot(args);
+        break;
+
+      case TOOL_NAMES.GET_SOLANA_EPOCH_INFO:
+        result = await toolService.getSolanaEpochInfo(args);
+        break;
+
+      case TOOL_NAMES.GET_SOLANA_CLUSTER_NODES:
+        result = await toolService.getSolanaClusterNodes(args);
+        break;
+
+      case TOOL_NAMES.GET_SOLANA_WALLET_ADDRESS:
+        result = toolService.getSolanaWalletAddress();
         break;
 
       default:

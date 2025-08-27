@@ -10,13 +10,15 @@ export class ToolService {
     userPrivateKey,
     userAddress,
     coinGeckoApiKey,
-    alchemyApiKey
+    alchemyApiKey,
+    solanaPrivateKey
   ) {
     this.agg = new AgService(agUrl);
     this.coinGeckoApi = new CoinGeckoApiService(coinGeckoApiKey);
-    this.blockchain = new BlockchainService(userPrivateKey, alchemyApiKey);
+    this.blockchain = new BlockchainService(userPrivateKey, alchemyApiKey, solanaPrivateKey);
     this.userPrivateKey = userPrivateKey;
     this.userAddress = userAddress;
+    this.solanaPrivateKey = solanaPrivateKey;
   }
 
   async getSwapPrice(params) {
@@ -804,5 +806,236 @@ export class ToolService {
     } catch (error) {
       throw new Error(`Formatted to wei conversion failed: ${error.message}`);
     }
+  }
+
+  // Solana Methods
+  async getSolanaBalance(params = {}) {
+    const { cluster = 'mainnet-beta', address } = params;
+
+    try {
+      const result = await this.blockchain.getSolanaBalance(cluster, address);
+
+      return {
+        message: "Solana balance retrieved successfully",
+        data: result,
+        summary: `Balance: ${result.balanceSOL} SOL (${result.balance} lamports) on ${cluster}`,
+        cluster: cluster
+      };
+    } catch (error) {
+      throw new Error(`Failed to get Solana balance: ${error.message}`);
+    }
+  }
+
+  async transferSOL(params) {
+    const { toAddress, amount, cluster = 'mainnet-beta' } = params;
+
+    if (!toAddress || amount === undefined) {
+      throw new Error("Missing required parameters: toAddress, amount");
+    }
+
+    if (!this.solanaPrivateKey) {
+      throw new Error("Solana private key is required for SOL transfers");
+    }
+
+    try {
+      const result = await this.blockchain.transferSOL(toAddress, amount, cluster);
+
+      return {
+        message: "SOL transfer completed successfully",
+        data: result,
+        summary: `Transferred ${amount} SOL to ${toAddress}`,
+        nextSteps: [
+          "1. Transaction has been confirmed on the Solana blockchain",
+          "2. Check the transaction on Solana explorer",
+          `3. Transaction signature: ${result.signature}`
+        ],
+        cluster: cluster
+      };
+    } catch (error) {
+      throw new Error(`SOL transfer failed: ${error.message}`);
+    }
+  }
+
+  async getSolanaAccountInfo(params) {
+    const { address, cluster = 'mainnet-beta' } = params;
+
+    if (!address) {
+      throw new Error("address is required");
+    }
+
+    try {
+      const result = await this.blockchain.getSolanaAccountInfo(address, cluster);
+
+      return {
+        message: "Solana account info retrieved successfully",
+        data: result,
+        summary: result.exists 
+          ? `Account exists with ${result.lamports} lamports, owner: ${result.owner}`
+          : "Account does not exist",
+        cluster: cluster
+      };
+    } catch (error) {
+      throw new Error(`Failed to get Solana account info: ${error.message}`);
+    }
+  }
+
+  async getSolanaTransactionStatus(params) {
+    const { signature, cluster = 'mainnet-beta' } = params;
+
+    if (!signature) {
+      throw new Error("signature is required");
+    }
+
+    try {
+      const result = await this.blockchain.getSolanaTransactionStatus(signature, cluster);
+
+      return {
+        message: "Solana transaction status retrieved successfully",
+        data: result,
+        summary: `Transaction status: ${result.status}${result.confirmations ? ` (${result.confirmations} confirmations)` : ''}`,
+        cluster: cluster
+      };
+    } catch (error) {
+      throw new Error(`Failed to get Solana transaction status: ${error.message}`);
+    }
+  }
+
+  async getSolanaTransactionDetails(params) {
+    const { signature, cluster = 'mainnet-beta' } = params;
+
+    if (!signature) {
+      throw new Error("signature is required");
+    }
+
+    try {
+      const result = await this.blockchain.getSolanaTransactionDetails(signature, cluster);
+
+      return {
+        message: "Solana transaction details retrieved successfully",
+        data: result,
+        summary: result.found 
+          ? `Transaction found: ${result.success ? 'Success' : 'Failed'}, Fee: ${result.fee} lamports`
+          : "Transaction not found",
+        cluster: cluster
+      };
+    } catch (error) {
+      throw new Error(`Failed to get Solana transaction details: ${error.message}`);
+    }
+  }
+
+  async airdropSOL(params = {}) {
+    const { amount = 1, cluster = 'devnet' } = params;
+
+    if (cluster === 'mainnet-beta') {
+      throw new Error("Airdrop is not available on mainnet-beta");
+    }
+
+    if (!this.solanaPrivateKey) {
+      throw new Error("Solana private key is required for airdrops");
+    }
+
+    try {
+      const result = await this.blockchain.airdropSOL(amount, cluster);
+
+      return {
+        message: "SOL airdrop completed successfully",
+        data: result,
+        summary: `Airdropped ${amount} SOL on ${cluster}`,
+        nextSteps: [
+          "1. SOL has been added to your wallet",
+          "2. Check your balance with get_solana_balance tool",
+          `3. Transaction signature: ${result.signature}`
+        ],
+        cluster: cluster
+      };
+    } catch (error) {
+      throw new Error(`SOL airdrop failed: ${error.message}`);
+    }
+  }
+
+  async getSolanaSupportedClusters() {
+    try {
+      const clusters = this.blockchain.getSupportedSolanaClusters();
+
+      return {
+        message: "Supported Solana clusters retrieved successfully",
+        data: { clusters },
+        summary: `Found ${clusters.length} supported Solana clusters`,
+        clusters: clusters
+      };
+    } catch (error) {
+      throw new Error(`Failed to get supported Solana clusters: ${error.message}`);
+    }
+  }
+
+  async getSolanaSlot(params = {}) {
+    const { cluster = 'mainnet-beta' } = params;
+
+    try {
+      const result = await this.blockchain.getSolanaSlot(cluster);
+
+      return {
+        message: "Solana slot information retrieved successfully",
+        data: result,
+        summary: `Current slot: ${result.slot} on ${cluster}`,
+        cluster: cluster
+      };
+    } catch (error) {
+      throw new Error(`Failed to get Solana slot: ${error.message}`);
+    }
+  }
+
+  async getSolanaEpochInfo(params = {}) {
+    const { cluster = 'mainnet-beta' } = params;
+
+    try {
+      const result = await this.blockchain.getSolanaEpochInfo(cluster);
+
+      return {
+        message: "Solana epoch info retrieved successfully",
+        data: result,
+        summary: `Epoch ${result.epoch}: ${result.slotIndex}/${result.slotsInEpoch} slots, Block height: ${result.blockHeight}`,
+        cluster: cluster
+      };
+    } catch (error) {
+      throw new Error(`Failed to get Solana epoch info: ${error.message}`);
+    }
+  }
+
+  async getSolanaClusterNodes(params = {}) {
+    const { cluster = 'mainnet-beta' } = params;
+
+    try {
+      const result = await this.blockchain.getSolanaClusterNodes(cluster);
+
+      return {
+        message: "Solana cluster nodes retrieved successfully",
+        data: result,
+        summary: `Found ${result.count} active nodes on ${cluster}`,
+        cluster: cluster
+      };
+    } catch (error) {
+      throw new Error(`Failed to get Solana cluster nodes: ${error.message}`);
+    }
+  }
+
+  getSolanaWalletAddress() {
+    const address = this.blockchain.getSolanaWalletAddress();
+    
+    if (!address) {
+      return {
+        message: "No Solana wallet configured",
+        data: null,
+        summary: "Solana private key not provided",
+        note: "Set SOLANA_PRIVATE_KEY environment variable to use Solana functions"
+      };
+    }
+
+    return {
+      message: "Solana wallet address retrieved successfully",
+      data: { address },
+      summary: `Solana wallet address: ${address}`,
+      address: address
+    };
   }
 }

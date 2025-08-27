@@ -1,0 +1,118 @@
+{
+  "commands": [
+    {
+      "name": "sol-balance",
+      "description": "Check Solana wallet balance",
+      "script": "node slash-commands/sol-balance.js",
+      "params": [
+        {
+          "name": "address",
+          "description": "Wallet address (optional)",
+          "required": false
+        },
+        {
+          "name": "cluster", 
+          "description": "Solana cluster (mainnet-beta, devnet, testnet)",
+          "required": false,
+          "default": "mainnet-beta"
+        }
+      ]
+    },
+    {
+      "name": "sol-transfer",
+      "description": "Transfer SOL to another address",
+      "script": "node slash-commands/sol-transfer.js",
+      "params": [
+        {
+          "name": "recipient",
+          "description": "Recipient's wallet address",
+          "required": true
+        },
+        {
+          "name": "amount",
+          "description": "Amount of SOL to send",
+          "required": true
+        },
+        {
+          "name": "cluster",
+          "description": "Solana cluster (mainnet-beta, devnet, testnet)",
+          "required": false,
+          "default": "mainnet-beta"
+        }
+      ]
+    },
+    {
+      "name": "sol-airdrop",
+      "description": "Request SOL airdrop on devnet/testnet",
+      "script": "node slash-commands/sol-airdrop.js",
+      "params": [
+        {
+          "name": "amount",
+          "description": "Amount of SOL to request",
+          "required": false,
+          "default": "1"
+        },
+        {
+          "name": "cluster",
+          "description": "Solana cluster (devnet, testnet only)",
+          "required": false,
+          "default": "devnet"
+        }
+      ]
+    },
+    {
+      "name": "sol-account",
+      "description": "Get Solana account information",
+      "script": "node slash-commands/sol-account.js",
+      "params": [
+        {
+          "name": "address",
+          "description": "Account address to query",
+          "required": true
+        },
+        {
+          "name": "cluster",
+          "description": "Solana cluster (mainnet-beta, devnet, testnet)",
+          "required": false,
+          "default": "mainnet-beta"
+        }
+      ]
+    },
+    {
+      "name": "sol-tx",
+      "description": "Get Solana transaction status/details",
+      "script": "node slash-commands/sol-tx.js",
+      "params": [
+        {
+          "name": "signature",
+          "description": "Transaction signature",
+          "required": true
+        },
+        {
+          "name": "cluster",
+          "description": "Solana cluster (mainnet-beta, devnet, testnet)",
+          "required": false,
+          "default": "mainnet-beta"
+        },
+        {
+          "name": "details",
+          "description": "Show detailed info (true/false)",
+          "required": false,
+          "default": "false"
+        }
+      ]
+    },
+    {
+      "name": "sol-wallet",
+      "description": "Show Solana wallet info or supported clusters",
+      "script": "node slash-commands/sol-wallet.js",
+      "params": [
+        {
+          "name": "info",
+          "description": "Show clusters instead of wallet (clusters)",
+          "required": false
+        }
+      ]
+    }
+  ]
+}

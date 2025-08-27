@@ -43,6 +43,19 @@ export const TOOL_NAMES = {
   // Conversion Utility Tools
   CONVERT_WEI_TO_FORMATTED: "convert_wei_to_formatted",
   CONVERT_FORMATTED_TO_WEI: "convert_formatted_to_wei",
+
+  // Solana Tools
+  GET_SOLANA_BALANCE: "get_solana_balance",
+  TRANSFER_SOL: "transfer_sol",
+  GET_SOLANA_ACCOUNT_INFO: "get_solana_account_info",
+  GET_SOLANA_TRANSACTION_STATUS: "get_solana_transaction_status", 
+  GET_SOLANA_TRANSACTION_DETAILS: "get_solana_transaction_details",
+  AIRDROP_SOL: "airdrop_sol",
+  GET_SOLANA_SUPPORTED_CLUSTERS: "get_solana_supported_clusters",
+  GET_SOLANA_SLOT: "get_solana_slot",
+  GET_SOLANA_EPOCH_INFO: "get_solana_epoch_info",
+  GET_SOLANA_CLUSTER_NODES: "get_solana_cluster_nodes",
+  GET_SOLANA_WALLET_ADDRESS: "get_solana_wallet_address",
 };
 
 // Aggregator Server Configuration

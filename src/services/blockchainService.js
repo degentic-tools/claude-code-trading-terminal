@@ -1,15 +1,22 @@
 // src/services/blockchainService.js
 import { ethers } from "ethers";
+import { SolanaService } from "./solanaService.js";
 
 export class BlockchainService {
-  constructor(privateKey, alchemyApiKey) {
+  constructor(privateKey, alchemyApiKey, solanaPrivateKey) {
     this.wallet = null;
     this.providers = {};
     this.alchemyApiKey = alchemyApiKey; // Store the Alchemy API key
+    this.solana = null;
 
     // Initialize wallet if private key is provided
     if (privateKey) {
       this.initializeWallet(privateKey);
+    }
+
+    // Initialize Solana service if Solana private key is provided
+    if (solanaPrivateKey) {
+      this.initializeSolana(solanaPrivateKey);
     }
 
     // Initialize providers for supported chains
@@ -19,10 +26,20 @@ export class BlockchainService {
   initializeWallet(privateKey) {
     try {
       this.wallet = new ethers.Wallet(privateKey);
-      console.error("Wallet initialized:", this.wallet.address);
+      console.error("EVM Wallet initialized:", this.wallet.address);
     } catch (error) {
-      console.error("Failed to initialize wallet:", error.message);
-      throw new Error("Invalid private key provided");
+      console.error("Failed to initialize EVM wallet:", error.message);
+      throw new Error("Invalid EVM private key provided");
+    }
+  }
+
+  initializeSolana(solanaPrivateKey) {
+    try {
+      this.solana = new SolanaService(solanaPrivateKey);
+      console.error("Solana Wallet initialized:", this.solana.getWalletAddress());
+    } catch (error) {
+      console.error("Failed to initialize Solana wallet:", error.message);
+      throw new Error(`Invalid Solana private key provided: ${error.message}`);
     }
   }
 
@@ -707,5 +724,70 @@ export class BlockchainService {
 
   getWalletAddress() {
     return this.wallet ? this.wallet.address : null;
+  }
+
+  getSolanaWalletAddress() {
+    return this.solana ? this.solana.getWalletAddress() : null;
+  }
+
+  getSolanaService() {
+    if (!this.solana) {
+      throw new Error("Solana service not initialized - provide SOLANA_PRIVATE_KEY");
+    }
+    return this.solana;
+  }
+
+  // Solana convenience methods
+  async getSolanaBalance(cluster = 'mainnet-beta', address = null) {
+    const solana = this.getSolanaService();
+    return await solana.getBalance(cluster, address);
+  }
+
+  async transferSOL(toAddress, amount, cluster = 'mainnet-beta') {
+    const solana = this.getSolanaService();
+    return await solana.transferSOL(toAddress, amount, cluster);
+  }
+
+  async getSolanaAccountInfo(address, cluster = 'mainnet-beta') {
+    const solana = this.getSolanaService();
+    return await solana.getAccountInfo(address, cluster);
+  }
+
+  async getSolanaTransactionStatus(signature, cluster = 'mainnet-beta') {
+    const solana = this.getSolanaService();
+    return await solana.getTransactionStatus(signature, cluster);
+  }
+
+  async getSolanaTransactionDetails(signature, cluster = 'mainnet-beta') {
+    const solana = this.getSolanaService();
+    return await solana.getTransactionDetails(signature, cluster);
+  }
+
+  async airdropSOL(amount, cluster = 'devnet') {
+    const solana = this.getSolanaService();
+    return await solana.airdropSOL(amount, cluster);
+  }
+
+  getSupportedSolanaClusters() {
+    return this.solana ? this.solana.getSupportedClusters() : [];
+  }
+
+  isSolanaClusterSupported(cluster) {
+    return this.solana ? this.solana.isClusterSupported(cluster) : false;
+  }
+
+  async getSolanaSlot(cluster = 'mainnet-beta') {
+    const solana = this.getSolanaService();
+    return await solana.getSlot(cluster);
+  }
+
+  async getSolanaEpochInfo(cluster = 'mainnet-beta') {
+    const solana = this.getSolanaService();
+    return await solana.getEpochInfo(cluster);
+  }
+
+  async getSolanaClusterNodes(cluster = 'mainnet-beta') {
+    const solana = this.getSolanaService();
+    return await solana.getClusterNodes(cluster);
   }
 }
