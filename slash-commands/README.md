@@ -1,6 +1,6 @@
 # Solana Slash Commands
 
-This directory contains slash commands for interacting with Solana blockchain through your defi-trading-mcp.
+This directory contains slash commands for interacting with Solana blockchain through your cc-trading-terminal.
 
 ## Available Commands
 

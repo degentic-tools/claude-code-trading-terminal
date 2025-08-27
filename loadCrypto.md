@@ -1,6 +1,6 @@
 # 💰 How to Load Crypto into Your Wallet
 
-Before you can start trading with the DeFi Trading Agent, you'll need cryptocurrency in your wallet. Here are the most common ways to get started:
+Before you can start trading with the CC Trading Terminal, you'll need cryptocurrency in your wallet. Here are the most common ways to get started:
 
 ## 🏦 **Centralized Exchanges (CEX)**
 
@@ -50,7 +50,7 @@ If you can access your private key:
 For better security or organization:
 
 ```bash
-npx defi-trading-mcp --create-wallet
+npx cc-trading-terminal --create-wallet
 ```
 
 Then transfer your existing crypto to the new address.
@@ -78,4 +78,4 @@ Then transfer your existing crypto to the new address.
 
 ---
 
-**Ready to trade?** Once you have crypto in your wallet, your DeFi Trading Agent can help you find opportunities, analyze markets, and execute trades across 17+ blockchain networks!
+**Ready to trade?** Once you have crypto in your wallet, your CC Trading Terminal can help you find opportunities, analyze markets, and execute trades across multiple blockchain networks!

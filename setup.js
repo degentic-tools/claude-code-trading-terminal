@@ -8,7 +8,7 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-console.log("🚀 DeFi Trading MCP Server Setup\n");
+console.log("🚀 CC Trading Terminal Setup\n");
 
 // Check if running in development mode
 const isDev = process.argv.includes("--dev");
@@ -37,9 +37,9 @@ if (isDev) {
     JSON.stringify(
       {
         mcpServers: {
-          "defi-trading-mcp": {
+          "cc-trading-terminal": {
             command: "npx",
-            args: ["defi-trading-mcp"],
+            args: ["cc-trading-terminal"],
             env: {
               USER_PRIVATE_KEY: "your_private_key_here",
               USER_ADDRESS: "0xYourWalletAddress",
@@ -59,9 +59,9 @@ if (isDev) {
     JSON.stringify(
       {
         mcpServers: {
-          "defi-trading-mcp": {
+          "cc-trading-terminal": {
             command: "npx",
-            args: ["defi-trading-mcp"],
+            args: ["cc-trading-terminal"],
             env: {
               USER_PRIVATE_KEY: "your_private_key_here",
               USER_ADDRESS: "0xYourWalletAddress",

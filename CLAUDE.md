@@ -1,10 +1,10 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code when working with the DeFi Trading MCP repository.
+This file provides guidance to Claude Code when working with the CC Trading Terminal repository.
 
 ## Setup Instructions
 
-This repository contains a DeFi Trading MCP (Model Context Protocol) server that transforms AI assistants into autonomous crypto trading agents.
+This repository contains a CC Trading Terminal (Claude Code Trading Terminal) server that provides agent-native trading functionality.
 
 ### Prerequisites
 - Node.js >= 18.0.0
@@ -21,14 +21,14 @@ The MCP has been configured for Claude Code with placeholder environment variabl
 
 1. **Update environment variables** in Claude Code configuration:
    ```bash
-   claude mcp remove defi-trading
-   claude mcp add defi-trading \
+   claude mcp remove trading-terminal
+   claude mcp add trading-terminal \
      -e USER_PRIVATE_KEY=your_actual_private_key \
      -e USER_ADDRESS=0xYourActualWalletAddress \
      -e COINGECKO_API_KEY=CG-your_actual_coingecko_api_key \
      -e ALCHEMY_API_KEY=your_actual_alchemy_api_key \
      -e SOLANA_PRIVATE_KEY=your_solana_private_key_base58_or_array \
-     -- npx defi-trading-mcp
+     -- npx cc-trading-terminal
    ```
 
    Note: SOLANA_PRIVATE_KEY can be in base58 format, hex format (128 chars), or JSON array format (e.g., "[1,2,3,...]")
@@ -41,7 +41,7 @@ The MCP has been configured for Claude Code with placeholder environment variabl
 ### Testing the MCP Server
 ```bash
 # Test server startup (should show provider initialization for 17+ chains)
-npx defi-trading-mcp
+npx cc-trading-terminal
 
 # Check if server can be reached by Claude Code
 claude mcp list

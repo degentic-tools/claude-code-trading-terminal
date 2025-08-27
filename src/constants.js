@@ -69,6 +69,14 @@ export const TOOL_NAMES = {
   GET_PUMPFUN_TOKEN: "get_pumpfun_token",
   QUICK_BUY_MEMECOIN: "quick_buy_memecoin",
   SCAN_NEW_MEMECOINS: "scan_new_memecoins",
+
+  // PumpFun Bot Tools
+  START_PUMPFUN_BOT: "start_pumpfun_bot",
+  STOP_PUMPFUN_BOT: "stop_pumpfun_bot",
+  PUMPFUN_AUTO_BUY: "pumpfun_auto_buy",
+  PUMPFUN_QUICK_SNIPE: "pumpfun_quick_snipe",
+  SET_PUMPFUN_FILTERS: "set_pumpfun_filters",
+  GET_PUMPFUN_BOT_STATUS: "get_pumpfun_bot_status",
 };
 
 // Aggregator Server Configuration

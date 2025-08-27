@@ -5,6 +5,7 @@ import { BlockchainService } from "./services/blockchainService.js";
 import { SolanaDexService } from "./services/solanaDexService.js";
 import { SolanaLimitOrderService } from "./services/solanaLimitOrderService.js";
 import { MemecoinService } from "./services/memecoinService.js";
+import { PumpFunBotService } from "./services/pumpFunBotService.js";
 import { ethers } from "ethers";
 
 export class ToolService {
@@ -28,6 +29,7 @@ export class ToolService {
       this.solanaDex = new SolanaDexService(this.blockchain.solana);
       this.solanaLimitOrders = new SolanaLimitOrderService(this.blockchain.solana, this.solanaDex);
       this.memecoinService = new MemecoinService(this.blockchain.solana, this.solanaDex);
+      this.pumpFunBot = new PumpFunBotService(this.blockchain.solana);
     }
   }
 
@@ -1347,6 +1349,159 @@ export class ToolService {
       };
     } catch (error) {
       throw new Error(`Memecoin scan failed: ${error.message}`);
+    }
+  }
+
+  // PumpFun Bot Tools
+  async startPumpfunBot(params = {}) {
+    if (!this.pumpFunBot) {
+      throw new Error("PumpFun bot service not initialized - provide SOLANA_PRIVATE_KEY");
+    }
+
+    const { filters = {}, autoTrading = false } = params;
+
+    try {
+      await this.pumpFunBot.startListening(filters);
+      
+      if (autoTrading) {
+        await this.pumpFunBot.enableAutoTrading(autoTrading);
+      }
+
+      return {
+        message: "PumpFun bot started successfully",
+        data: this.pumpFunBot.getStatus(),
+        summary: "Now monitoring PumpFun for new token launches",
+        capabilities: [
+          "Real-time token launch detection",
+          "Configurable filtering system",
+          "Auto-trading with risk controls",
+          "Quick snipe functionality"
+        ]
+      };
+    } catch (error) {
+      throw new Error(`PumpFun bot startup failed: ${error.message}`);
+    }
+  }
+
+  async stopPumpfunBot() {
+    if (!this.pumpFunBot) {
+      throw new Error("PumpFun bot service not initialized");
+    }
+
+    try {
+      await this.pumpFunBot.stopListening();
+
+      return {
+        message: "PumpFun bot stopped successfully",
+        data: this.pumpFunBot.getStatus(),
+        summary: "Bot stopped monitoring token launches"
+      };
+    } catch (error) {
+      throw new Error(`PumpFun bot stop failed: ${error.message}`);
+    }
+  }
+
+  async pumpfunAutoBuy(params) {
+    const { tokenMint, solAmount, options = {} } = params;
+    
+    if (!tokenMint || !solAmount) {
+      throw new Error("Missing required parameters: tokenMint, solAmount");
+    }
+
+    if (!this.pumpFunBot) {
+      throw new Error("PumpFun bot service not initialized - provide SOLANA_PRIVATE_KEY");
+    }
+
+    try {
+      const result = await this.pumpFunBot.autoBuyToken(tokenMint, solAmount, options);
+
+      return {
+        message: "PumpFun auto-buy completed successfully",
+        data: result,
+        summary: `Bought ${solAmount} SOL worth of ${tokenMint}`,
+        transactionDetails: {
+          signature: result.signature,
+          timestamp: new Date(result.timestamp).toISOString(),
+          status: result.status
+        }
+      };
+    } catch (error) {
+      throw new Error(`PumpFun auto-buy failed: ${error.message}`);
+    }
+  }
+
+  async pumpfunQuickSnipe(params) {
+    const { tokenMint, solAmount = 0.1 } = params;
+    
+    if (!tokenMint) {
+      throw new Error("Missing required parameter: tokenMint");
+    }
+
+    if (!this.pumpFunBot) {
+      throw new Error("PumpFun bot service not initialized - provide SOLANA_PRIVATE_KEY");
+    }
+
+    try {
+      const result = await this.pumpFunBot.quickSnipe(tokenMint, solAmount);
+
+      return {
+        message: "PumpFun quick snipe completed successfully",
+        data: result,
+        summary: `Sniped ${tokenMint} with ${solAmount} SOL`,
+        warning: "Quick snipe uses high slippage and priority fees for speed",
+        transactionDetails: {
+          signature: result.signature,
+          timestamp: new Date(result.timestamp).toISOString(),
+          status: result.status
+        }
+      };
+    } catch (error) {
+      throw new Error(`PumpFun quick snipe failed: ${error.message}`);
+    }
+  }
+
+  async setPumpfunFilters(params) {
+    const filters = params;
+    
+    if (!this.pumpFunBot) {
+      throw new Error("PumpFun bot service not initialized");
+    }
+
+    try {
+      this.pumpFunBot.setFilters(filters);
+
+      return {
+        message: "PumpFun bot filters updated successfully",
+        data: this.pumpFunBot.getStatus(),
+        summary: "Bot will now use updated filtering criteria",
+        activeFilters: filters
+      };
+    } catch (error) {
+      throw new Error(`Filter update failed: ${error.message}`);
+    }
+  }
+
+  async getPumpfunBotStatus() {
+    if (!this.pumpFunBot) {
+      throw new Error("PumpFun bot service not initialized");
+    }
+
+    try {
+      const status = this.pumpFunBot.getStatus();
+
+      return {
+        message: "PumpFun bot status retrieved successfully",
+        data: status,
+        summary: status.isListening ? "Bot is actively monitoring" : "Bot is stopped",
+        details: {
+          monitoring: status.isListening,
+          walletAddress: status.walletAddress,
+          activeFilters: status.filters,
+          registeredCallbacks: status.callbacks.length
+        }
+      };
+    } catch (error) {
+      throw new Error(`Status retrieval failed: ${error.message}`);
     }
   }
 }

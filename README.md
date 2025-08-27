@@ -5,7 +5,7 @@ Agent-native trading terminal built on top of Claude Code. Deploy sub-agents tha
 ## Installation
 
 ```bash
-npm install defi-trading-mcp
+npm install cc-trading-terminal
 ```
 
 ## Setup
@@ -16,7 +16,7 @@ Configure your trading agent in Claude Code:
 claude mcp add trading-terminal \
   -e SOLANA_PRIVATE_KEY=your_solana_private_key_base58 \
   -e COINGECKO_API_KEY=your_coingecko_api_key \
-  -- npx defi-trading-mcp
+  -- npx cc-trading-terminal
 ```
 
 ## Trading Features
