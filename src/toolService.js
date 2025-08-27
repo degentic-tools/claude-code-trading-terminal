@@ -2,6 +2,9 @@
 import { AgService } from "./services/agService.js";
 import { CoinGeckoApiService } from "./services/coinGeckoApiService.js";
 import { BlockchainService } from "./services/blockchainService.js";
+import { SolanaDexService } from "./services/solanaDexService.js";
+import { SolanaLimitOrderService } from "./services/solanaLimitOrderService.js";
+import { MemecoinService } from "./services/memecoinService.js";
 import { ethers } from "ethers";
 
 export class ToolService {
@@ -19,6 +22,13 @@ export class ToolService {
     this.userPrivateKey = userPrivateKey;
     this.userAddress = userAddress;
     this.solanaPrivateKey = solanaPrivateKey;
+
+    // Initialize advanced Solana trading services
+    if (solanaPrivateKey && this.blockchain.solana) {
+      this.solanaDex = new SolanaDexService(this.blockchain.solana);
+      this.solanaLimitOrders = new SolanaLimitOrderService(this.blockchain.solana, this.solanaDex);
+      this.memecoinService = new MemecoinService(this.blockchain.solana, this.solanaDex);
+    }
   }
 
   async getSwapPrice(params) {
@@ -1037,5 +1047,306 @@ export class ToolService {
       summary: `Solana wallet address: ${address}`,
       address: address
     };
+  }
+
+  // Advanced Solana DEX Trading Methods
+  async swapOnSolanaDex(params) {
+    const { inputToken, outputToken, amount, platform = 'auto', slippageBps = 50 } = params;
+
+    if (!inputToken || !outputToken || !amount) {
+      throw new Error("Missing required parameters: inputToken, outputToken, amount");
+    }
+
+    if (!this.solanaDex) {
+      throw new Error("Solana DEX service not initialized - provide SOLANA_PRIVATE_KEY");
+    }
+
+    try {
+      let result;
+      const formattedAmount = this.solanaDex.formatAmount(amount);
+
+      if (platform === 'auto') {
+        result = await this.solanaDex.executeSwapOnBestDex(
+          this.solanaDex.getTokenAddress(inputToken),
+          this.solanaDex.getTokenAddress(outputToken),
+          formattedAmount,
+          slippageBps
+        );
+      } else {
+        // Execute on specific platform
+        const quote = platform === 'jupiter' 
+          ? await this.solanaDex.getJupiterQuote(
+              this.solanaDex.getTokenAddress(inputToken),
+              this.solanaDex.getTokenAddress(outputToken),
+              formattedAmount,
+              slippageBps
+            )
+          : await this.solanaDex.getRaydiumQuote(
+              this.solanaDex.getTokenAddress(inputToken),
+              this.solanaDex.getTokenAddress(outputToken),
+              formattedAmount,
+              slippageBps / 100
+            );
+
+        result = platform === 'jupiter'
+          ? await this.solanaDex.executeJupiterSwap(quote)
+          : await this.solanaDex.executeRaydiumSwap(quote);
+      }
+
+      return {
+        message: "Solana DEX swap completed successfully",
+        data: result,
+        summary: `Swapped ${amount} ${inputToken} for ${this.solanaDex.formatPrice(result.outAmount)} ${outputToken} on ${result.platform}`,
+        nextSteps: [
+          "1. Transaction confirmed on Solana blockchain",
+          "2. Check transaction on Solana explorer",
+          `3. Transaction signature: ${result.signature}`
+        ]
+      };
+    } catch (error) {
+      throw new Error(`Solana DEX swap failed: ${error.message}`);
+    }
+  }
+
+  async getSolanaDexQuote(params) {
+    const { inputToken, outputToken, amount, platform = 'auto', slippageBps = 50 } = params;
+
+    if (!inputToken || !outputToken || !amount) {
+      throw new Error("Missing required parameters: inputToken, outputToken, amount");
+    }
+
+    if (!this.solanaDex) {
+      throw new Error("Solana DEX service not initialized - provide SOLANA_PRIVATE_KEY");
+    }
+
+    try {
+      const formattedAmount = this.solanaDex.formatAmount(amount);
+      let result;
+
+      if (platform === 'auto') {
+        result = await this.solanaDex.getBestQuote(
+          this.solanaDex.getTokenAddress(inputToken),
+          this.solanaDex.getTokenAddress(outputToken),
+          formattedAmount,
+          slippageBps
+        );
+      } else {
+        const quote = platform === 'jupiter'
+          ? await this.solanaDex.getJupiterQuote(
+              this.solanaDex.getTokenAddress(inputToken),
+              this.solanaDex.getTokenAddress(outputToken),
+              formattedAmount,
+              slippageBps
+            )
+          : await this.solanaDex.getRaydiumQuote(
+              this.solanaDex.getTokenAddress(inputToken),
+              this.solanaDex.getTokenAddress(outputToken),
+              formattedAmount,
+              slippageBps / 100
+            );
+
+        result = { bestQuote: quote, allQuotes: [quote] };
+      }
+
+      return {
+        message: "Solana DEX quote retrieved successfully",
+        data: result,
+        summary: `Best rate: ${this.solanaDex.formatPrice(result.bestQuote.outAmount)} ${outputToken} for ${amount} ${inputToken} on ${result.bestQuote.platform}`
+      };
+    } catch (error) {
+      throw new Error(`Solana DEX quote failed: ${error.message}`);
+    }
+  }
+
+  // Limit Order Methods
+  async createSolanaLimitOrder(params) {
+    const { type, inputToken, outputToken, amount, targetPrice, slippageBps = 100, expiry, platform = 'auto' } = params;
+
+    if (!type || !inputToken || !outputToken || !amount || !targetPrice) {
+      throw new Error("Missing required parameters: type, inputToken, outputToken, amount, targetPrice");
+    }
+
+    if (!this.solanaLimitOrders) {
+      throw new Error("Solana limit order service not initialized - provide SOLANA_PRIVATE_KEY");
+    }
+
+    try {
+      const result = await this.solanaLimitOrders.createLimitOrder({
+        type,
+        inputToken,
+        outputToken,
+        amount,
+        targetPrice,
+        slippageBps,
+        expiry,
+        platform
+      });
+
+      return {
+        message: "Limit order created successfully",
+        data: result,
+        summary: `${type} order: ${amount} ${inputToken} at ${targetPrice} ${outputToken} each`,
+        nextSteps: [
+          "1. Limit order is now monitoring market prices",
+          "2. Order will execute automatically when target price is reached",
+          "3. Check order status with get_solana_limit_orders tool"
+        ]
+      };
+    } catch (error) {
+      throw new Error(`Limit order creation failed: ${error.message}`);
+    }
+  }
+
+  async getSolanaLimitOrders(params = {}) {
+    const { status = 'all' } = params;
+
+    if (!this.solanaLimitOrders) {
+      throw new Error("Solana limit order service not initialized - provide SOLANA_PRIVATE_KEY");
+    }
+
+    try {
+      const result = await this.solanaLimitOrders.getLimitOrders(status);
+
+      return {
+        message: "Limit orders retrieved successfully",
+        data: result,
+        summary: `Found ${result.count} limit orders (${status}), monitoring: ${result.monitoring ? 'active' : 'inactive'}`
+      };
+    } catch (error) {
+      throw new Error(`Failed to get limit orders: ${error.message}`);
+    }
+  }
+
+  async cancelSolanaLimitOrder(params) {
+    const { orderId } = params;
+
+    if (!orderId) {
+      throw new Error("Missing required parameter: orderId");
+    }
+
+    if (!this.solanaLimitOrders) {
+      throw new Error("Solana limit order service not initialized - provide SOLANA_PRIVATE_KEY");
+    }
+
+    try {
+      const result = await this.solanaLimitOrders.cancelLimitOrder(orderId);
+
+      return {
+        message: "Limit order cancelled successfully",
+        data: result,
+        summary: `Order ${orderId} has been cancelled`
+      };
+    } catch (error) {
+      throw new Error(`Failed to cancel limit order: ${error.message}`);
+    }
+  }
+
+  // Memecoin Trading Methods
+  async getPumpFunTrending(params = {}) {
+    const { limit = 50, sortBy = 'created_timestamp', includeNsfw = false } = params;
+
+    if (!this.memecoinService) {
+      throw new Error("Memecoin service not initialized - provide SOLANA_PRIVATE_KEY");
+    }
+
+    try {
+      const result = await this.memecoinService.getPumpFunTrending(limit, sortBy, includeNsfw);
+
+      return {
+        message: "PumpFun trending tokens retrieved successfully",
+        data: result,
+        summary: `Found ${result.count} trending memecoins on PumpFun`,
+        riskLevels: {
+          low: result.trending.filter(t => t.riskLevel === 'low').length,
+          medium: result.trending.filter(t => t.riskLevel === 'medium').length,
+          high: result.trending.filter(t => t.riskLevel === 'high').length
+        }
+      };
+    } catch (error) {
+      throw new Error(`Failed to get PumpFun trending: ${error.message}`);
+    }
+  }
+
+  async getPumpFunToken(params) {
+    const { mintAddress } = params;
+
+    if (!mintAddress) {
+      throw new Error("Missing required parameter: mintAddress");
+    }
+
+    if (!this.memecoinService) {
+      throw new Error("Memecoin service not initialized - provide SOLANA_PRIVATE_KEY");
+    }
+
+    try {
+      const result = await this.memecoinService.getPumpFunToken(mintAddress);
+
+      return {
+        message: "PumpFun token info retrieved successfully",
+        data: result,
+        summary: `${result.symbol}: $${result.marketCap?.toLocaleString()} market cap, ${result.holders} holders, ${result.riskLevel} risk`
+      };
+    } catch (error) {
+      throw new Error(`Failed to get PumpFun token: ${error.message}`);
+    }
+  }
+
+  async quickBuyMemecoin(params) {
+    const { tokenAddress, solAmount, riskLevel = 'medium', maxSlippage } = params;
+
+    if (!tokenAddress || !solAmount) {
+      throw new Error("Missing required parameters: tokenAddress, solAmount");
+    }
+
+    if (!this.memecoinService) {
+      throw new Error("Memecoin service not initialized - provide SOLANA_PRIVATE_KEY");
+    }
+
+    try {
+      const result = await this.memecoinService.quickBuyMemecoin({
+        tokenAddress,
+        solAmount,
+        riskLevel,
+        maxSlippage
+      });
+
+      return {
+        message: "Memecoin quick buy completed successfully",
+        data: result,
+        summary: `Bought ${result.tokenInfo.symbol || 'MEMECOIN'} for ${solAmount} SOL (${riskLevel} risk)`,
+        nextSteps: [
+          "1. Transaction confirmed on Solana blockchain",
+          "2. Monitor your position for profit opportunities", 
+          "3. Consider setting stop-loss orders for risk management",
+          `4. Transaction signature: ${result.signature}`
+        ]
+      };
+    } catch (error) {
+      throw new Error(`Memecoin quick buy failed: ${error.message}`);
+    }
+  }
+
+  async scanNewMemecoins(params = {}) {
+    if (!this.memecoinService) {
+      throw new Error("Memecoin service not initialized - provide SOLANA_PRIVATE_KEY");
+    }
+
+    try {
+      const result = await this.memecoinService.scanNewMemecoins(params);
+
+      return {
+        message: "Memecoin scan completed successfully",
+        data: result,
+        summary: `Found ${result.count} potential memecoins matching your criteria`,
+        topPicks: result.coins.slice(0, 5).map(coin => ({
+          symbol: coin.symbol,
+          marketCap: coin.marketCap,
+          score: coin.potentialScore,
+          riskLevel: coin.riskLevel
+        }))
+      };
+    } catch (error) {
+      throw new Error(`Memecoin scan failed: ${error.message}`);
+    }
   }
 }

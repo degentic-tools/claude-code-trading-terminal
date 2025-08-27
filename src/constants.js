@@ -56,6 +56,19 @@ export const TOOL_NAMES = {
   GET_SOLANA_EPOCH_INFO: "get_solana_epoch_info",
   GET_SOLANA_CLUSTER_NODES: "get_solana_cluster_nodes",
   GET_SOLANA_WALLET_ADDRESS: "get_solana_wallet_address",
+
+  // Advanced Solana DEX Trading Tools
+  SWAP_ON_SOLANA_DEX: "swap_on_solana_dex",
+  GET_SOLANA_DEX_QUOTE: "get_solana_dex_quote",
+  CREATE_SOLANA_LIMIT_ORDER: "create_solana_limit_order",
+  GET_SOLANA_LIMIT_ORDERS: "get_solana_limit_orders",
+  CANCEL_SOLANA_LIMIT_ORDER: "cancel_solana_limit_order",
+
+  // Memecoin Trading Tools
+  GET_PUMPFUN_TRENDING: "get_pumpfun_trending",
+  GET_PUMPFUN_TOKEN: "get_pumpfun_token",
+  QUICK_BUY_MEMECOIN: "quick_buy_memecoin",
+  SCAN_NEW_MEMECOINS: "scan_new_memecoins",
 };
 
 // Aggregator Server Configuration
