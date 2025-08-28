@@ -1,8 +1,8 @@
 {
   "type": "module",
   "name": "@degentic/cc-trading-terminal",
-  "version": "2.1.5",
-  "description": "Agent-native trading terminal built on top of Claude Code. Deploy sub-agents that execute trades, monitor positions, and manage risk in parallel across unlimited wallets.",
+  "version": "2.2.0",
+  "description": "Agent-native trading terminal built on top of Claude Code with advanced real-time data ingestion pipeline. Deploy sub-agents that execute trades, monitor positions, and manage risk in parallel across unlimited wallets.",
   "main": "src/index.js",
   "bin": {
     "cc-trading-terminal": "src/index.js"
@@ -21,7 +21,9 @@
     "start": "node src/index.js",
     "test": "node test.js",
     "setup": "node setup.js",
-    "setup:dev": "node setup.js --dev"
+    "setup:dev": "node setup.js --dev",
+    "pipeline:start": "node src/pipeline/examples/start-pipeline.js",
+    "pipeline:test": "node src/pipeline/examples/test-pipeline.js"
   },
   "keywords": [
     "crypto-trading",
@@ -39,7 +41,13 @@
     "web3",
     "solana",
     "blockchain",
-    "automated-trading"
+    "automated-trading",
+    "data-pipeline",
+    "real-time-data",
+    "market-data",
+    "aladdin-alternative",
+    "data-ingestion",
+    "websocket-streams"
   ],
   "author": "degentic-tools",
   "license": "MIT",
@@ -55,9 +63,15 @@
     "bs58": "^6.0.0",
     "dotenv": "^16.4.7",
     "ethers": "^6.15.0",
-    "node-fetch": "^3.3.2"
+    "node-fetch": "^3.3.2",
+    "ws": "^8.18.0",
+    "eventsource": "^2.0.2"
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "prettier": "^3.0.0"
   }
 }

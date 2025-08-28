@@ -1,6 +1,98 @@
-# Claude Code Trading Terminal
+# CC Trading Terminal - Advanced Data Ingestion Pipeline
 
-Agent-native trading terminal built on top of Claude Code. Deploy sub-agents that execute trades, monitor positions, and manage risk in parallel across unlimited wallets.
+> **Agent-native trading terminal with real-time data ingestion pipeline similar to Aladdin's capabilities**
+
+[![Version](https://img.shields.io/npm/v/@degentic/cc-trading-terminal.svg)](https://www.npmjs.com/package/@degentic/cc-trading-terminal)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+## 🚀 New: Real-Time Data Ingestion Pipeline
+
+We've built a comprehensive real-time data ingestion pipeline that rivals institutional platforms like BlackRock's Aladdin. This system provides:
+
+- **Real-time WebSocket connections** to multiple market data sources
+- **Data normalization and transformation** for consistent formatting
+- **Message queue system** with high-throughput processing
+- **Advanced error handling** and retry mechanisms
+- **Data validation and quality checks** 
+- **Historical data backfill** capabilities
+- **Rate limiting and API management**
+- **Comprehensive monitoring** and health checks
+
+## 📊 Architecture Overview
+
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   Data Sources  │───▶│   Pipeline Core  │───▶│   Consumers     │
+├─────────────────┤    ├──────────────────┤    ├─────────────────┤
+│ • CC Terminal   │    │ • Connection Mgr │    │ • Trading Bots  │
+│ • Binance       │    │ • Queue Manager  │    │ • Risk Systems  │
+│ • Coinbase      │    │ • Data Processor │    │ • Analytics     │
+│ • CoinGecko     │    │ • Validator      │    │ • Monitoring    │
+│ • Uniswap       │    │ • Transformer    │    │ • Historical DB │
+│ • Custom APIs   │    │ • Enricher       │    │ • Dashboards    │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+```
+
+## 🏗️ Pipeline Components
+
+### Core Pipeline (`src/pipeline/core/`)
+- **Pipeline.js** - Main orchestrator coordinating all components
+- **ConnectionManager.js** - WebSocket and HTTP connection pooling
+- **RateLimiter.js** - Advanced rate limiting with multiple strategies
+
+### Data Processing (`src/pipeline/processors/`)
+- **DataProcessor.js** - Main processing engine with parallel execution
+- **DataValidator.js** - Comprehensive validation with custom rules
+- **DataTransformer.js** - Normalize data from different sources
+- **DataEnricher.js** - Add contextual information and analytics
+
+### Queue Management (`src/pipeline/queue/`)
+- **QueueManager.js** - High-level queue orchestration
+- **InMemoryQueue.js** - Fast in-memory processing
+- **PersistentQueue.js** - Durable file-based queues
+
+### Data Sources (`src/pipeline/sources/`)
+- **DataSourceManager.js** - Coordinate multiple data feeds
+- **CCTradingTerminalSource.js** - Integration with existing tools
+- **CryptoDataSource.js** - Generic exchange WebSocket connector
+
+### Storage & Monitoring (`src/pipeline/storage/`, `src/pipeline/monitoring/`)
+- **HistoricalDataService.js** - Data persistence and backfill
+- **HealthChecker.js** - Component health monitoring
+- **Logger.js** - Structured logging system
+
+## 🚀 Quick Start
+
+### Start the Pipeline
+```bash
+# Start with default configuration
+npm run pipeline:start
+
+# Start with historical data backfill
+npm run pipeline:start -- --backfill
+```
+
+### Integration Example
+```javascript
+import { PipelineService } from './src/pipeline/PipelineService.js';
+
+// Initialize pipeline
+const pipeline = new PipelineService({
+  enableHistoricalData: true,
+  enableRealTimeData: true,
+  autoStart: true
+});
+
+// Handle processed data
+pipeline.on('data', (data) => {
+  console.log('Received:', data.dataType, data.data);
+});
+
+// Start the pipeline
+await pipeline.initialize();
+```
+
+Agent-native trading terminal built on top of Claude Code with advanced real-time data ingestion. Deploy sub-agents that execute trades, monitor positions, and manage risk in parallel across unlimited wallets.
 
 ## Installation
 
