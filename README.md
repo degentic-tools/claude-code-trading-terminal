@@ -13,7 +13,7 @@ npm install cc-trading-terminal
 Configure your trading agent in Claude Code:
 
 ```bash
-claude mcp add trading-terminal \
+claude mcp add cc-trading-terminal \
   -e SOLANA_PRIVATE_KEY=your_solana_private_key_base58 \
   -e COINGECKO_API_KEY=your_coingecko_api_key \
   -- npx cc-trading-terminal

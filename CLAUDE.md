@@ -21,8 +21,8 @@ The MCP has been configured for Claude Code with placeholder environment variabl
 
 1. **Update environment variables** in Claude Code configuration:
    ```bash
-   claude mcp remove trading-terminal
-   claude mcp add trading-terminal \
+   claude mcp remove cc-trading-terminal
+   claude mcp add cc-trading-terminal \
      -e USER_PRIVATE_KEY=your_actual_private_key \
      -e USER_ADDRESS=0xYourActualWalletAddress \
      -e COINGECKO_API_KEY=CG-your_actual_coingecko_api_key \

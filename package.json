@@ -1,7 +1,7 @@
 {
   "type": "module",
-  "name": "cc-trading-terminal",
-  "version": "2.1.3",
+  "name": "@degentic/cc-trading-terminal",
+  "version": "2.1.5",
   "description": "Agent-native trading terminal built on top of Claude Code. Deploy sub-agents that execute trades, monitor positions, and manage risk in parallel across unlimited wallets.",
   "main": "src/index.js",
   "bin": {

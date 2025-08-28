@@ -145,3 +145,7 @@ coingeckoendpoints-2.txt
 local/
 dev/
 scratch/
+
+# Claude Flow and Swarm files (may contain secrets)
+.claude-flow/
+.swarm/
