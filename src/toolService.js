@@ -6,6 +6,8 @@ import { SolanaDexService } from "./services/solanaDexService.js";
 import { SolanaLimitOrderService } from "./services/solanaLimitOrderService.js";
 import { MemecoinService } from "./services/memecoinService.js";
 import { PumpFunBotService } from "./services/pumpFunBotService.js";
+import { MarketMakerService } from "./services/MarketMakerService.js";
+import { WalletManagerService } from "./services/WalletManagerService.js";
 import { ethers } from "ethers";
 
 export class ToolService {
@@ -30,7 +32,11 @@ export class ToolService {
       this.solanaLimitOrders = new SolanaLimitOrderService(this.blockchain.solana, this.solanaDex);
       this.memecoinService = new MemecoinService(this.blockchain.solana, this.solanaDex);
       this.pumpFunBot = new PumpFunBotService(this.blockchain.solana);
+      this.marketMaker = new MarketMakerService();
     }
+    
+    // Initialize wallet manager service
+    this.walletManager = new WalletManagerService();
   }
 
   async getSwapPrice(params) {
@@ -1502,6 +1508,375 @@ export class ToolService {
       };
     } catch (error) {
       throw new Error(`Status retrieval failed: ${error.message}`);
+    }
+  }
+
+  // Market Maker Tools
+  async initializeMarketMaker(config = {}) {
+    if (!this.marketMaker) {
+      throw new Error('Market maker service not available. Solana wallet required.');
+    }
+
+    if (!this.solanaPrivateKey) {
+      throw new Error('Solana private key required for market maker initialization');
+    }
+
+    try {
+      const result = await this.marketMaker.initialize(this.solanaPrivateKey);
+      
+      return {
+        message: result.success ? 'Market maker initialized successfully' : 'Failed to initialize market maker',
+        data: result,
+        summary: result.success ? 
+          `Market maker ready for wallet: ${result.walletAddress}` : 
+          `Initialization failed: ${result.error}`
+      };
+    } catch (error) {
+      throw new Error(`Market maker initialization failed: ${error.message}`);
+    }
+  }
+
+  async startMarketMaker({ tokenMint, targetAllocation = 0.5, config = {} }) {
+    if (!this.marketMaker) {
+      throw new Error('Market maker service not available');
+    }
+
+    if (!tokenMint) {
+      throw new Error('Token mint address required');
+    }
+
+    try {
+      // Update configuration if provided
+      if (Object.keys(config).length > 0) {
+        this.marketMaker.updateConfig(config);
+      }
+
+      const result = await this.marketMaker.start(tokenMint, targetAllocation);
+      
+      return {
+        message: result.success ? 'Market maker started successfully' : 'Failed to start market maker',
+        data: {
+          ...result,
+          tokenMint,
+          targetAllocation,
+          configuration: this.marketMaker.config
+        },
+        summary: result.success ? 
+          `Market maker started for ${tokenMint} with ${targetAllocation * 100}% SOL allocation` : 
+          `Start failed: ${result.error}`
+      };
+    } catch (error) {
+      throw new Error(`Market maker start failed: ${error.message}`);
+    }
+  }
+
+  async stopMarketMaker() {
+    if (!this.marketMaker) {
+      throw new Error('Market maker service not available');
+    }
+
+    try {
+      const result = await this.marketMaker.stop();
+      
+      return {
+        message: result.success ? 'Market maker stopped successfully' : 'Failed to stop market maker',
+        data: result,
+        summary: result.success ? 
+          'Market maker stopped and final stats recorded' : 
+          `Stop failed: ${result.error}`
+      };
+    } catch (error) {
+      throw new Error(`Market maker stop failed: ${error.message}`);
+    }
+  }
+
+  async getMarketMakerStatus() {
+    if (!this.marketMaker) {
+      throw new Error('Market maker service not available');
+    }
+
+    try {
+      const stats = this.marketMaker.getStats();
+      
+      return {
+        message: 'Market maker status retrieved successfully',
+        data: {
+          status: stats.isRunning ? 'running' : 'stopped',
+          configuration: this.marketMaker.config,
+          statistics: stats,
+          wallet: this.marketMaker.wallet ? this.marketMaker.wallet.publicKey.toString() : null
+        },
+        summary: `Market maker is ${stats.isRunning ? 'active' : 'inactive'} - ${stats.totalTrades} total trades, ${stats.successRate.toFixed(1)}% success rate`
+      };
+    } catch (error) {
+      throw new Error(`Status retrieval failed: ${error.message}`);
+    }
+  }
+
+  async updateMarketMakerConfig(newConfig) {
+    if (!this.marketMaker) {
+      throw new Error('Market maker service not available');
+    }
+
+    if (!newConfig || typeof newConfig !== 'object') {
+      throw new Error('Configuration object required');
+    }
+
+    try {
+      const updatedConfig = this.marketMaker.updateConfig(newConfig);
+      
+      return {
+        message: 'Market maker configuration updated successfully',
+        data: {
+          previousConfig: { ...this.marketMaker.config, ...newConfig },
+          newConfig: updatedConfig,
+          isRunning: this.marketMaker.isRunning
+        },
+        summary: `Configuration updated. Key changes: ${Object.keys(newConfig).join(', ')}`
+      };
+    } catch (error) {
+      throw new Error(`Configuration update failed: ${error.message}`);
+    }
+  }
+
+  async getMarketMakerStats() {
+    if (!this.marketMaker) {
+      throw new Error('Market maker service not available');
+    }
+
+    try {
+      const stats = this.marketMaker.getStats();
+      
+      return {
+        message: 'Market maker statistics retrieved successfully',
+        data: stats,
+        summary: `Runtime: ${Math.round(stats.runtime / 1000 / 60)}min | Trades: ${stats.totalTrades} | Success: ${stats.successRate.toFixed(1)}% | Volume: ${stats.totalVolume}`
+      };
+    } catch (error) {
+      throw new Error(`Statistics retrieval failed: ${error.message}`);
+    }
+  }
+
+  // Wallet Management Tools
+  async generateWallet({ type = 'solana', name = null }) {
+    try {
+      let wallet;
+      
+      if (type === 'solana') {
+        wallet = this.walletManager.generateSolanaWallet();
+      } else if (type === 'ethereum') {
+        wallet = this.walletManager.generateEthereumWallet();
+      } else {
+        throw new Error('Unsupported wallet type. Use "solana" or "ethereum"');
+      }
+
+      // Add name if provided
+      if (name) {
+        wallet.name = name;
+      }
+
+      // Store in manager
+      const key = type === 'solana' ? wallet.address : wallet.address.toLowerCase();
+      this.walletManager.wallets.set(key, { 
+        ...wallet, 
+        generated: true,
+        generatedAt: new Date().toISOString()
+      });
+
+      return {
+        message: `${type.charAt(0).toUpperCase() + type.slice(1)} wallet generated successfully`,
+        data: {
+          type: wallet.type,
+          name: wallet.name || `${type}-${wallet.address.slice(0, 8)}`,
+          address: wallet.address,
+          publicKey: wallet.publicKey,
+          // Only return private key for generated wallets for security
+          privateKey: wallet.privateKey
+        },
+        summary: `Generated ${type} wallet: ${wallet.address}`
+      };
+    } catch (error) {
+      throw new Error(`Wallet generation failed: ${error.message}`);
+    }
+  }
+
+  async importWallet({ type, privateKey, name = null }) {
+    if (!type || !privateKey) {
+      throw new Error('Both type and privateKey are required');
+    }
+
+    try {
+      let result;
+      
+      if (type === 'solana') {
+        result = await this.walletManager.importSolanaWallet(privateKey, name);
+      } else if (type === 'ethereum') {
+        result = await this.walletManager.importEthereumWallet(privateKey, name);
+      } else {
+        throw new Error('Unsupported wallet type. Use "solana" or "ethereum"');
+      }
+
+      return {
+        message: result.message,
+        data: result.success ? {
+          type: result.wallet.type,
+          name: result.wallet.name,
+          address: result.wallet.address,
+          publicKey: result.wallet.publicKey,
+          imported: result.wallet.imported,
+          importedAt: result.wallet.importedAt
+        } : null,
+        summary: result.success ? 
+          `Imported ${type} wallet: ${result.wallet.address}` : 
+          `Import failed: ${result.error}`
+      };
+    } catch (error) {
+      throw new Error(`Wallet import failed: ${error.message}`);
+    }
+  }
+
+  async exportWallet({ address }) {
+    if (!address) {
+      throw new Error('Wallet address is required');
+    }
+
+    try {
+      const result = this.walletManager.exportWallet(address);
+      
+      return {
+        message: result.message,
+        data: result.success ? result.wallet : null,
+        summary: result.success ? 
+          `Exported wallet: ${result.wallet.address}` : 
+          `Export failed: ${result.error}`
+      };
+    } catch (error) {
+      throw new Error(`Wallet export failed: ${error.message}`);
+    }
+  }
+
+  async listWallets() {
+    try {
+      const result = await this.walletManager.listWallets();
+      
+      return {
+        message: result.message,
+        data: {
+          wallets: result.wallets,
+          count: result.count
+        },
+        summary: `Found ${result.count} wallet(s) in memory`
+      };
+    } catch (error) {
+      throw new Error(`Wallet listing failed: ${error.message}`);
+    }
+  }
+
+  async removeWallet({ address }) {
+    if (!address) {
+      throw new Error('Wallet address is required');
+    }
+
+    try {
+      const result = await this.walletManager.removeWallet(address);
+      
+      return {
+        message: result.message,
+        data: result.success ? result.removedWallet : null,
+        summary: result.success ? 
+          `Removed wallet: ${result.removedWallet.address}` : 
+          `Removal failed: ${result.error}`
+      };
+    } catch (error) {
+      throw new Error(`Wallet removal failed: ${error.message}`);
+    }
+  }
+
+  async getWalletBalances({ rpcEndpoint = 'https://api.mainnet-beta.solana.com' } = {}) {
+    try {
+      const result = await this.walletManager.getWalletBalances(rpcEndpoint);
+      
+      return {
+        message: result.message,
+        data: {
+          balances: result.balances,
+          totalWallets: result.totalWallets
+        },
+        summary: `Retrieved balances for ${result.totalWallets} Solana wallet(s)`
+      };
+    } catch (error) {
+      throw new Error(`Balance retrieval failed: ${error.message}`);
+    }
+  }
+
+  async saveWalletsToFile({ password, filename = 'wallets.json' }) {
+    if (!password) {
+      throw new Error('Password is required for encryption');
+    }
+
+    try {
+      const result = await this.walletManager.saveWalletsToFile(password, filename);
+      
+      return {
+        message: result.message,
+        data: result.success ? {
+          filename: result.filename || filename,
+          filePath: result.filePath,
+          walletCount: result.walletCount
+        } : null,
+        summary: result.success ? 
+          `Saved ${result.walletCount} wallet(s) to ${filename}` : 
+          `Save failed: ${result.error}`
+      };
+    } catch (error) {
+      throw new Error(`Wallet save failed: ${error.message}`);
+    }
+  }
+
+  async loadWalletsFromFile({ password, filename = 'wallets.json' }) {
+    if (!password) {
+      throw new Error('Password is required for decryption');
+    }
+
+    try {
+      const result = await this.walletManager.loadWalletsFromFile(password, filename);
+      
+      return {
+        message: result.message,
+        data: result.success ? {
+          loadedCount: result.loadedCount,
+          totalWallets: result.totalWallets
+        } : null,
+        summary: result.success ? 
+          `Loaded ${result.loadedCount} wallet(s) from ${filename}` : 
+          `Load failed: ${result.error}`
+      };
+    } catch (error) {
+      throw new Error(`Wallet load failed: ${error.message}`);
+    }
+  }
+
+  async createWalletBackup({ password, backupName = null }) {
+    if (!password) {
+      throw new Error('Password is required for backup encryption');
+    }
+
+    try {
+      const result = await this.walletManager.createBackup(password, backupName);
+      
+      return {
+        message: result.message,
+        data: result.success ? {
+          filename: result.filename,
+          filePath: result.filePath,
+          walletCount: result.walletCount
+        } : null,
+        summary: result.success ? 
+          `Created backup: ${result.filename}` : 
+          `Backup failed: ${result.error}`
+      };
+    } catch (error) {
+      throw new Error(`Backup creation failed: ${error.message}`);
     }
   }
 }

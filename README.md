@@ -113,6 +113,31 @@ claude mcp add cc-trading-terminal \
 
 ## Trading Features
 
+### 🤖 Market Maker Bot (NEW!)
+Automated portfolio rebalancing inspired by institutional market-making strategies:
+
+- **50/50 Portfolio Rebalancing**: Maintains target allocation between SOL and any SPL token
+- **Jupiter Integration**: Uses Jupiter Aggregator for optimal swap execution
+- **Risk Management**: Built-in slippage protection and price tolerance controls
+- **Real-time Monitoring**: Continuous portfolio tracking and intelligent rebalancing
+- **Configurable Parameters**: Adjustable thresholds, wait times, and risk settings
+- **Performance Analytics**: Comprehensive trading statistics and success metrics
+
+```javascript
+// Initialize market maker
+await initializeMarketMaker({ 
+  slippageBps: 50,           // 0.5% slippage tolerance
+  rebalanceThreshold: 0.05,   // Rebalance when allocation drifts 5%
+  waitTime: 60000            // Check every minute
+});
+
+// Start market making for a token
+await startMarketMaker({
+  tokenMint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", // USDC
+  targetAllocation: 0.6      // 60% SOL, 40% USDC
+});
+```
+
 ### Multi-DEX Integration
 - **Jupiter Aggregator**: Best price routing across all Solana DEXes
 - **Raydium**: Fastest execution and newest token support

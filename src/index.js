@@ -1517,6 +1517,260 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           required: [],
         },
       },
+
+      // Market Maker Tools
+      {
+        name: TOOL_NAMES.INITIALIZE_MARKET_MAKER,
+        description: "Initialize the market maker with wallet and configuration",
+        inputSchema: {
+          type: "object",
+          properties: {
+            config: {
+              type: "object",
+              description: "Market maker configuration (optional)",
+              properties: {
+                slippageBps: { type: "number", description: "Slippage tolerance in basis points (default: 50)" },
+                priceTolerance: { type: "number", description: "Price tolerance percentage (default: 0.02)" },
+                waitTime: { type: "number", description: "Wait time between rebalances in milliseconds (default: 60000)" },
+                rebalanceThreshold: { type: "number", description: "Rebalance threshold percentage (default: 0.05)" },
+                priorityFee: { type: "number", description: "Priority fee in SOL (default: 0.001)" }
+              }
+            }
+          },
+          required: []
+        }
+      },
+      {
+        name: TOOL_NAMES.START_MARKET_MAKER,
+        description: "Start the market maker bot for a specific token pair",
+        inputSchema: {
+          type: "object",
+          properties: {
+            tokenMint: {
+              type: "string",
+              description: "Token mint address to trade against SOL"
+            },
+            targetAllocation: {
+              type: "number",
+              description: "Target SOL allocation (0.5 = 50% SOL, 50% token, default: 0.5)",
+              minimum: 0.1,
+              maximum: 0.9
+            },
+            config: {
+              type: "object",
+              description: "Runtime configuration overrides (optional)",
+              properties: {
+                slippageBps: { type: "number" },
+                priceTolerance: { type: "number" },
+                waitTime: { type: "number" },
+                rebalanceThreshold: { type: "number" }
+              }
+            }
+          },
+          required: ["tokenMint"]
+        }
+      },
+      {
+        name: TOOL_NAMES.STOP_MARKET_MAKER,
+        description: "Stop the running market maker bot",
+        inputSchema: {
+          type: "object",
+          properties: {},
+          required: []
+        }
+      },
+      {
+        name: TOOL_NAMES.GET_MARKET_MAKER_STATUS,
+        description: "Get current status of the market maker including stats and configuration",
+        inputSchema: {
+          type: "object",
+          properties: {},
+          required: []
+        }
+      },
+      {
+        name: TOOL_NAMES.UPDATE_MARKET_MAKER_CONFIG,
+        description: "Update market maker configuration while running",
+        inputSchema: {
+          type: "object",
+          properties: {
+            config: {
+              type: "object",
+              description: "Configuration updates",
+              properties: {
+                slippageBps: { type: "number", description: "Slippage tolerance in basis points" },
+                priceTolerance: { type: "number", description: "Price tolerance percentage" },
+                waitTime: { type: "number", description: "Wait time between rebalances in milliseconds" },
+                rebalanceThreshold: { type: "number", description: "Rebalance threshold percentage" },
+                priorityFee: { type: "number", description: "Priority fee in SOL" }
+              }
+            }
+          },
+          required: ["config"]
+        }
+      },
+      {
+        name: TOOL_NAMES.GET_MARKET_MAKER_STATS,
+        description: "Get detailed statistics from the market maker",
+        inputSchema: {
+          type: "object",
+          properties: {},
+          required: []
+        }
+      },
+
+      // Wallet Management Tools
+      {
+        name: TOOL_NAMES.GENERATE_WALLET,
+        description: "Generate a new Solana or Ethereum wallet",
+        inputSchema: {
+          type: "object",
+          properties: {
+            type: {
+              type: "string",
+              description: "Wallet type to generate",
+              enum: ["solana", "ethereum"],
+              default: "solana"
+            },
+            name: {
+              type: "string",
+              description: "Optional name for the wallet"
+            }
+          },
+          required: []
+        }
+      },
+      {
+        name: TOOL_NAMES.IMPORT_WALLET,
+        description: "Import a wallet using its private key",
+        inputSchema: {
+          type: "object",
+          properties: {
+            type: {
+              type: "string",
+              description: "Wallet type (solana or ethereum)",
+              enum: ["solana", "ethereum"]
+            },
+            privateKey: {
+              type: "string",
+              description: "Private key in appropriate format (base58 for Solana, hex for Ethereum)"
+            },
+            name: {
+              type: "string",
+              description: "Optional name for the wallet"
+            }
+          },
+          required: ["type", "privateKey"]
+        }
+      },
+      {
+        name: TOOL_NAMES.EXPORT_WALLET,
+        description: "Export a wallet's private key by address",
+        inputSchema: {
+          type: "object",
+          properties: {
+            address: {
+              type: "string",
+              description: "Wallet address to export"
+            }
+          },
+          required: ["address"]
+        }
+      },
+      {
+        name: TOOL_NAMES.LIST_WALLETS,
+        description: "List all imported and generated wallets",
+        inputSchema: {
+          type: "object",
+          properties: {},
+          required: []
+        }
+      },
+      {
+        name: TOOL_NAMES.REMOVE_WALLET,
+        description: "Remove a wallet from memory",
+        inputSchema: {
+          type: "object",
+          properties: {
+            address: {
+              type: "string",
+              description: "Wallet address to remove"
+            }
+          },
+          required: ["address"]
+        }
+      },
+      {
+        name: TOOL_NAMES.GET_WALLET_BALANCES,
+        description: "Get balances for all Solana wallets",
+        inputSchema: {
+          type: "object",
+          properties: {
+            rpcEndpoint: {
+              type: "string",
+              description: "Solana RPC endpoint (optional, defaults to mainnet-beta)",
+              default: "https://api.mainnet-beta.solana.com"
+            }
+          },
+          required: []
+        }
+      },
+      {
+        name: TOOL_NAMES.SAVE_WALLETS_TO_FILE,
+        description: "Save all wallets to an encrypted file",
+        inputSchema: {
+          type: "object",
+          properties: {
+            password: {
+              type: "string",
+              description: "Password for encryption"
+            },
+            filename: {
+              type: "string",
+              description: "Filename for the wallet file (optional, defaults to 'wallets.json')",
+              default: "wallets.json"
+            }
+          },
+          required: ["password"]
+        }
+      },
+      {
+        name: TOOL_NAMES.LOAD_WALLETS_FROM_FILE,
+        description: "Load wallets from an encrypted file",
+        inputSchema: {
+          type: "object",
+          properties: {
+            password: {
+              type: "string",
+              description: "Password for decryption"
+            },
+            filename: {
+              type: "string",
+              description: "Filename of the wallet file (optional, defaults to 'wallets.json')",
+              default: "wallets.json"
+            }
+          },
+          required: ["password"]
+        }
+      },
+      {
+        name: TOOL_NAMES.CREATE_WALLET_BACKUP,
+        description: "Create an encrypted backup of all wallets",
+        inputSchema: {
+          type: "object",
+          properties: {
+            password: {
+              type: "string",
+              description: "Password for backup encryption"
+            },
+            backupName: {
+              type: "string",
+              description: "Custom backup filename (optional, auto-generated if not provided)"
+            }
+          },
+          required: ["password"]
+        }
+      },
     ],
   };
 });
@@ -1833,6 +2087,68 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case TOOL_NAMES.GET_PUMPFUN_BOT_STATUS:
         result = await toolService.getPumpfunBotStatus();
+        break;
+
+      // Market Maker Tools
+      case TOOL_NAMES.INITIALIZE_MARKET_MAKER:
+        result = await toolService.initializeMarketMaker(args.config);
+        break;
+
+      case TOOL_NAMES.START_MARKET_MAKER:
+        result = await toolService.startMarketMaker(args);
+        break;
+
+      case TOOL_NAMES.STOP_MARKET_MAKER:
+        result = await toolService.stopMarketMaker();
+        break;
+
+      case TOOL_NAMES.GET_MARKET_MAKER_STATUS:
+        result = await toolService.getMarketMakerStatus();
+        break;
+
+      case TOOL_NAMES.UPDATE_MARKET_MAKER_CONFIG:
+        result = await toolService.updateMarketMakerConfig(args.config);
+        break;
+
+      case TOOL_NAMES.GET_MARKET_MAKER_STATS:
+        result = await toolService.getMarketMakerStats();
+        break;
+
+      // Wallet Management Tools
+      case TOOL_NAMES.GENERATE_WALLET:
+        result = await toolService.generateWallet(args);
+        break;
+
+      case TOOL_NAMES.IMPORT_WALLET:
+        result = await toolService.importWallet(args);
+        break;
+
+      case TOOL_NAMES.EXPORT_WALLET:
+        result = await toolService.exportWallet(args);
+        break;
+
+      case TOOL_NAMES.LIST_WALLETS:
+        result = await toolService.listWallets();
+        break;
+
+      case TOOL_NAMES.REMOVE_WALLET:
+        result = await toolService.removeWallet(args);
+        break;
+
+      case TOOL_NAMES.GET_WALLET_BALANCES:
+        result = await toolService.getWalletBalances(args);
+        break;
+
+      case TOOL_NAMES.SAVE_WALLETS_TO_FILE:
+        result = await toolService.saveWalletsToFile(args);
+        break;
+
+      case TOOL_NAMES.LOAD_WALLETS_FROM_FILE:
+        result = await toolService.loadWalletsFromFile(args);
+        break;
+
+      case TOOL_NAMES.CREATE_WALLET_BACKUP:
+        result = await toolService.createWalletBackup(args);
         break;
 
       default:

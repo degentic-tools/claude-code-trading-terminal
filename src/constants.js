@@ -77,6 +77,25 @@ export const TOOL_NAMES = {
   PUMPFUN_QUICK_SNIPE: "pumpfun_quick_snipe",
   SET_PUMPFUN_FILTERS: "set_pumpfun_filters",
   GET_PUMPFUN_BOT_STATUS: "get_pumpfun_bot_status",
+
+  // Market Maker Tools
+  INITIALIZE_MARKET_MAKER: "initialize_market_maker",
+  START_MARKET_MAKER: "start_market_maker",
+  STOP_MARKET_MAKER: "stop_market_maker",
+  GET_MARKET_MAKER_STATUS: "get_market_maker_status",
+  UPDATE_MARKET_MAKER_CONFIG: "update_market_maker_config",
+  GET_MARKET_MAKER_STATS: "get_market_maker_stats",
+
+  // Wallet Management Tools
+  GENERATE_WALLET: "generate_wallet",
+  IMPORT_WALLET: "import_wallet",
+  EXPORT_WALLET: "export_wallet",
+  LIST_WALLETS: "list_wallets",
+  REMOVE_WALLET: "remove_wallet",
+  GET_WALLET_BALANCES: "get_wallet_balances",
+  SAVE_WALLETS_TO_FILE: "save_wallets_to_file",
+  LOAD_WALLETS_FROM_FILE: "load_wallets_from_file",
+  CREATE_WALLET_BACKUP: "create_wallet_backup",
 };
 
 // Aggregator Server Configuration
